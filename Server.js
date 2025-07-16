@@ -15,18 +15,32 @@ mongoose.connect(MONGO_URI, {
 .then(() => console.log('✅ MongoDB Connected'))
 .catch((err) => console.error('❌ MongoDB Connection Error:', err));
 
-// ✅ Middlewares
-app.use(cors({
-  origin: 'https://2nd-project-sigma.vercel.app', // ✅ Your frontend deployed URL
+// ✅ CORS Config for Vercel frontend
+const corsOptions = {
+  origin: 'https://2nd-project-sigma.vercel.app', // Your frontend URL
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
-}));
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 200,
+};
 
+app.use(cors(corsOptions));
+
+// ✅ Handle preflight requests
+app.options('*', cors(corsOptions));
+
+// ✅ Log incoming requests (Optional for debugging)
+app.use((req, res, next) => {
+  console.log(`[${req.method}] ${req.originalUrl} from ${req.headers.origin}`);
+  next();
+});
+
+// ✅ Middleware
 app.use(express.json({ limit: '5mb' }));
 
 // ✅ Routes
-app.use('/api/auth', require('./Routes/Auth'));      // ✅ no colon here
-app.use('/api/products', require('./Routes/Product')); // ✅ no colon here
+app.use('/api/auth', require('./Routes/Auth'));
+app.use('/api/products', require('./Routes/Product'));
 
 // ✅ 404 Handler
 app.use('*', (req, res) => {
