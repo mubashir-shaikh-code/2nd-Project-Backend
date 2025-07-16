@@ -9,8 +9,8 @@ const MONGO_URI = 'mongodb+srv://mubashiraijaz1:1234@cluster0.4jnkxno.mongodb.ne
 
 // ✅ Connect to MongoDB
 mongoose.connect(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
+  // useNewUrlParser: true,
+  // useUnifiedTopology: true,
 })
 .then(() => console.log('✅ MongoDB Connected'))
 .catch((err) => console.error('❌ MongoDB Connection Error:', err));
@@ -22,7 +22,7 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(express.json({ limit: '5mb' }));
+  app.use(express.json({ limit: '5mb' }));
 
 // ✅ Routes
 app.use('/api/auth', require('./Routes/Auth'));      
