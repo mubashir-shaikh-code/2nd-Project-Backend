@@ -5,7 +5,7 @@ const app = express();
 
 // ✅ Config
 const PORT = 5000;
-const MONGO_URI = 'mongodb://127.0.0.1:27017/LiFlow';
+const MONGO_URI = 'mongodb+srv://MuhammadMubashir:1234@project.lbrheme.mongodb.net/';
 
 // ✅ Connect to MongoDB
 mongoose.connect(MONGO_URI, {
