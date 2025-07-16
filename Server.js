@@ -16,7 +16,12 @@ mongoose.connect(MONGO_URI, {
 .catch((err) => console.error('❌ MongoDB Connection Error:', err));
 
 // ✅ Middlewares
-app.use(cors());
+app.use(cors({
+  origin: 'https://2nd-project-sigma.vercel.app', // ✅ Your frontend deployed URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
+
 app.use(express.json({ limit: '5mb' }));
 
 // ✅ Routes
