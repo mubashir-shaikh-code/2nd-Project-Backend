@@ -3,6 +3,13 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const app = express();
 
+
+app.use(cors({
+  origin: ["http://localhost:5173", "https://2nd-project-sigma.vercel.app"],
+  credentials: true
+}));
+
+
 // ✅ Config
 const PORT = 5000;
 const MONGO_URI = 'mongodb+srv://mubashiraijaz1:1234@cluster0.4jnkxno.mongodb.net/liflow';
@@ -14,13 +21,6 @@ mongoose.connect(MONGO_URI, {
 })
 .then(() => console.log('✅ MongoDB Connected'))
 .catch((err) => console.error('❌ MongoDB Connection Error:', err));
-
-const cors = require('cors');
-
-app.use(cors({
-  origin: ['https://2nd-project-sigma.vercel.app', 'http://localhost:5173'],
-  credentials: true,
-}));
 
 
   app.use(express.json({ limit: '5mb' }));
