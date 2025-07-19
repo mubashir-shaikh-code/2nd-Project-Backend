@@ -69,4 +69,16 @@ const login = async (req, res) => {
   }
 };
 
+// For admin login
+exports.loginAdmin = async (req, res) => {
+  const { email, password } = req.body;
+
+  if (email === 'admin@shop.com' && password === 'admin123') {
+    return res.json({ isAdmin: true, token: 'admin-token' });
+  }
+
+  return res.status(401).json({ message: 'Invalid admin credentials' });
+};
+
+
 module.exports = { register, login };
