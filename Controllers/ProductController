@@ -1,9 +1,10 @@
 const Product = require('../Models/Product');
 const cloudinary = require('../Cloudinary');
 
+// ✅ Get all approved products for users
 const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find(); 
+    const products = await Product.find({ status: 'approved' }).sort({ createdAt: -1 });
     res.status(200).json(products);
   } catch (err) {
     console.error(err);
@@ -11,8 +12,35 @@ const getAllProducts = async (req, res) => {
   }
 };
 
+// ✅ Get all pending products for admin
+const getPendingProducts = async (req, res) => {
+  try {
+    const products = await Product.find({ status: 'pending' }).sort({ createdAt: -1 });
+    res.status(200).json(products);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server Error' });
+  }
+};
 
-// ✅ Post a new product (auto-approved)
+// ✅ Approve product by ID (used by admin panel)
+const approveProduct = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const product = await Product.findByIdAndUpdate(productId, { status: 'approved' }, { new: true });
+
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    res.status(200).json({ message: 'Product approved', product });
+  } catch (err) {
+    console.error('Error approving product:', err);
+    res.status(500).json({ error: 'Server error while approving product' });
+  }
+};
+
+// ✅ Post a new product (auto pending)
 const postProduct = async (req, res) => {
   try {
     const { description, price, image, userEmail, category } = req.body;
@@ -33,12 +61,10 @@ const postProduct = async (req, res) => {
       image: imageUrl,
       userEmail,
       category,
-      status: 'approved', // Make sure this is set
+      status: 'pending', // stay pending until admin approves
     });
 
     const savedProduct = await newProduct.save();
-
-    console.log('Product saved:', savedProduct);
 
     res.status(201).json({ message: 'Product posted successfully', product: savedProduct });
   } catch (err) {
@@ -49,5 +75,7 @@ const postProduct = async (req, res) => {
 
 module.exports = {
   getAllProducts,
+  getPendingProducts,
+  approveProduct,
   postProduct,
 };

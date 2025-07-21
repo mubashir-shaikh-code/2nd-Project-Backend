@@ -16,6 +16,8 @@ app.use(express.json({ limit: '5mb' }));
 // ✅ Routes
 app.use('/api/auth', require('./Routes/Auth'));
 app.use('/api/products', require('./Routes/Product'));
+app.use('/api/admin', require('./Routes/Admin'));
+
 
 // ✅ Connect to MongoDB and start server
 mongoose.connect(MONGO_URI)
