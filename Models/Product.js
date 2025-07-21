@@ -7,7 +7,7 @@ const productSchema = new mongoose.Schema(
     image: { type: String, required: true },
     userEmail: { type: String, required: true },
     category: { type: String, required: true },
-    
+    status: { type: String, default: 'approved' },
   },
   {
     timestamps: true,
