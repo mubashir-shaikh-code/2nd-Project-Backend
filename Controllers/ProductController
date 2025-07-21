@@ -1,18 +1,18 @@
 const Product = require('../Models/Product');
 const cloudinary = require('../Cloudinary');
 
-// Get all approved products
-const getApprovedProducts = async (req, res) => {
+// Get all products (now all are approved by default)
+const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find({ status: 'approved' }).sort({ createdAt: -1 });
+    const products = await Product.find().sort({ createdAt: -1 });
     res.status(200).json(products);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to fetch approved products' });
+    res.status(500).json({ error: 'Failed to fetch products' });
   }
 };
 
-// Post a new product (will be in 'pending' status)
+// Post a new product (auto-approved)
 const postProduct = async (req, res) => {
   try {
     const { description, price, image, userEmail, category } = req.body;
@@ -33,12 +33,12 @@ const postProduct = async (req, res) => {
       image: imageUrl,
       userEmail,
       category,
-      status: 'pending',
+      status: 'approved', // Auto-approve directly
     });
 
     await newProduct.save();
 
-    res.status(201).json({ message: 'Product submitted for approval' });
+    res.status(201).json({ message: 'Product posted successfully', product: newProduct });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error while posting product' });
@@ -46,6 +46,6 @@ const postProduct = async (req, res) => {
 };
 
 module.exports = {
-  getApprovedProducts,
+  getAllProducts,
   postProduct,
 };
