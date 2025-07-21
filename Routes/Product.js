@@ -5,16 +5,21 @@ const {
   postProduct,
   approveProduct,
   rejectProduct,
+  getPendingProducts, // ✅ Added
 } = require('../Controllers/ProductController');
 
-// ✅ Get all products (admin will see all; frontend filters status if needed)
+// ✅ Get all approved products (visible to users on home page)
 router.get('/', getAllProducts);
+
+// ✅ Get all pending products (only for admin panel)
+router.get('/pending', getPendingProducts); // ✅ NEW ROUTE
 
 // ✅ Post a new product
 router.post('/', postProduct);
 
 // ✅ Approve product (admin only)
 router.patch('/approve/:id', approveProduct);
+router.put('/approve/:id', approveProduct);
 
 // ✅ Reject product (admin only)
 router.patch('/reject/:id', rejectProduct);

@@ -1,7 +1,7 @@
 const Product = require('../Models/Product');
 const cloudinary = require('../Cloudinary');
 
-// ✅ Get all approved products for users
+// ✅ Get all approved products (visible on home page for users)
 const getAllProducts = async (req, res) => {
   try {
     const products = await Product.find({ status: 'approved' }).sort({ createdAt: -1 });
@@ -12,35 +12,58 @@ const getAllProducts = async (req, res) => {
   }
 };
 
-// ✅ Get all pending products for admin
+// ✅ Get all pending products (visible only to admin)
 const getPendingProducts = async (req, res) => {
   try {
-    const products = await Product.find({ status: 'pending' }).sort({ createdAt: -1 });
-    res.status(200).json(products);
+    const pendingProducts = await Product.find({ status: 'pending' }).sort({ createdAt: -1 });
+    res.status(200).json(pendingProducts);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server Error' });
   }
 };
 
-// ✅ Approve product by ID (used by admin panel)
+// ✅ Approve product by ID (admin only)
 const approveProduct = async (req, res) => {
   try {
-    const productId = req.params.id;
-    const product = await Product.findByIdAndUpdate(productId, { status: 'approved' }, { new: true });
+    const { id } = req.params;
 
-    if (!product) {
+    const updatedProduct = await Product.findByIdAndUpdate(
+      id,
+      { status: 'approved' },
+      { new: true }
+    );
+
+    if (!updatedProduct) {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    res.status(200).json({ message: 'Product approved', product });
+    res.status(200).json({ message: 'Product approved successfully', product: updatedProduct });
   } catch (err) {
     console.error('Error approving product:', err);
     res.status(500).json({ error: 'Server error while approving product' });
   }
 };
 
-// ✅ Post a new product (auto pending)
+// ✅ Reject product by ID (admin only)
+const rejectProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const rejectedProduct = await Product.findByIdAndDelete(id);
+
+    if (!rejectedProduct) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    res.status(200).json({ message: 'Product rejected and removed successfully' });
+  } catch (err) {
+    console.error('Error rejecting product:', err);
+    res.status(500).json({ error: 'Server error while rejecting product' });
+  }
+};
+
+// ✅ Post a new product (status will be pending)
 const postProduct = async (req, res) => {
   try {
     const { description, price, image, userEmail, category } = req.body;
@@ -49,24 +72,23 @@ const postProduct = async (req, res) => {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
+    // Upload to Cloudinary
     const uploadRes = await cloudinary.uploader.upload(image, {
       folder: 'products',
     });
 
-    const imageUrl = uploadRes.secure_url;
-
     const newProduct = new Product({
       description,
       price,
-      image: imageUrl,
+      image: uploadRes.secure_url,
       userEmail,
       category,
-      status: 'pending', // stay pending until admin approves
+      status: 'pending',
     });
 
     const savedProduct = await newProduct.save();
 
-    res.status(201).json({ message: 'Product posted successfully', product: savedProduct });
+    res.status(201).json({ message: 'Product submitted for approval', product: savedProduct });
   } catch (err) {
     console.error('Error posting product:', err);
     res.status(500).json({ error: 'Server error while posting product' });
@@ -77,5 +99,6 @@ module.exports = {
   getAllProducts,
   getPendingProducts,
   approveProduct,
+  rejectProduct,
   postProduct,
 };
