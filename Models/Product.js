@@ -7,9 +7,7 @@ const productSchema = new mongoose.Schema(
     image: { type: String, required: true },
     userEmail: { type: String, required: true },
     category: { type: String, required: true },
-
-    // ✅ NEW FIELD: approval status
-    isApproved: { type: Boolean, default: false },
+    
   },
   {
     timestamps: true,

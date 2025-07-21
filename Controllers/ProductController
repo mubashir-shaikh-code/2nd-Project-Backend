@@ -1,7 +1,7 @@
 const Product = require('../Models/Product');
 const cloudinary = require('../Cloudinary');
 
-// Get All Products (Approved only)
+// Get all approved products
 const getApprovedProducts = async (req, res) => {
   try {
     const products = await Product.find({ status: 'approved' }).sort({ createdAt: -1 });
@@ -12,40 +12,7 @@ const getApprovedProducts = async (req, res) => {
   }
 };
 
-// Get All Pending Products (Admin Panel)
-const getPendingProducts = async (req, res) => {
-  try {
-    const pendingProducts = await Product.find({ status: 'pending' }).sort({ createdAt: -1 });
-    res.status(200).json(pendingProducts);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to fetch pending products' });
-  }
-};
-
-// Approve a Product (Admin only)
-const approveProduct = async (req, res) => {
-  try {
-    const { productId } = req.params;
-
-    const product = await Product.findByIdAndUpdate(
-      productId,
-      { status: 'approved' },
-      { new: true }
-    );
-
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-
-    res.status(200).json({ message: 'Product approved successfully', product });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error approving product' });
-  }
-};
-
-// Post New Product (always pending)
+// Post a new product (will be in 'pending' status)
 const postProduct = async (req, res) => {
   try {
     const { description, price, image, userEmail, category } = req.body;
@@ -66,7 +33,7 @@ const postProduct = async (req, res) => {
       image: imageUrl,
       userEmail,
       category,
-      status: 'pending', // new field
+      status: 'pending',
     });
 
     await newProduct.save();
@@ -80,7 +47,5 @@ const postProduct = async (req, res) => {
 
 module.exports = {
   getApprovedProducts,
-  getPendingProducts,
-  approveProduct,
-  postProduct
+  postProduct,
 };

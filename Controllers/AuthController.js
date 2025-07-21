@@ -5,6 +5,7 @@ const cloudinary = require('../Cloudinary');
 
 const SECRET_KEY = 'your_jwt_secret_key';
 
+// User Registration
 const register = async (req, res) => {
   try {
     const { username, email, password, profilePic } = req.body;
@@ -38,6 +39,7 @@ const register = async (req, res) => {
   }
 };
 
+// User Login
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -68,17 +70,5 @@ const login = async (req, res) => {
     res.status(500).json({ error: 'Login failed' });
   }
 };
-
-// For admin login
-exports.loginAdmin = async (req, res) => {
-  const { email, password } = req.body;
-
-  if (email === 'admin@shop.com' && password === 'admin123') {
-    return res.json({ isAdmin: true, token: 'admin-token' });
-  }
-
-  return res.status(401).json({ message: 'Invalid admin credentials' });
-};
-
 
 module.exports = { register, login };
