@@ -1,17 +1,16 @@
 const Product = require('../Models/Product');
 const cloudinary = require('../Cloudinary');
 
-// ✅ Get all approved products
 const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find({ status: 'approved' }).sort({ createdAt: -1 });
-    console.log('Fetched approved products:', products.length);
+    const products = await Product.find(); 
     res.status(200).json(products);
   } catch (err) {
-    console.error('Error fetching products:', err);
-    res.status(500).json({ error: 'Failed to fetch products' });
+    console.error(err);
+    res.status(500).json({ error: 'Server Error' });
   }
 };
+
 
 // ✅ Post a new product (auto-approved)
 const postProduct = async (req, res) => {
