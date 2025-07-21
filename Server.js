@@ -4,7 +4,6 @@ const cors = require('cors');
 
 const app = express();
 
-// ✅ Mongo URI (no .env)
 const MONGO_URI = 'mongodb+srv://mubashiraijaz1:1234@cluster0.4jnkxno.mongodb.net/liflow';
 
 // ✅ Middleware
