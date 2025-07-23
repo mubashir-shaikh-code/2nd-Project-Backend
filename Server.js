@@ -8,7 +8,7 @@ const MONGO_URI = 'mongodb+srv://mubashiraijaz1:1234@cluster0.4jnkxno.mongodb.ne
 
 // ✅ Middleware
 app.use(cors({
-  origin: ["http://localhost:5173", "https://2nd-project-sigma.vercel.app"],
+  origin: [ "https://2nd-project-sigma.vercel.app"],
   credentials: true
 }));
 app.use(express.json({ limit: '5mb' }));
@@ -16,7 +16,7 @@ app.use(express.json({ limit: '5mb' }));
 // ✅ Routes
 app.use('/api/auth', require('./Routes/Auth'));
 app.use('/api/products', require('./Routes/Product'));
-app.use('/api/admin', require('./Routes/Admin'));
+// app.use('/api/admin', require('./Routes/Admin'));
 
 
 // ✅ Connect to MongoDB and start server
