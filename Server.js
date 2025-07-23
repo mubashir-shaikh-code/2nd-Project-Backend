@@ -8,7 +8,7 @@ const MONGO_URI = 'mongodb+srv://mubashiraijaz1:1234@cluster0.4jnkxno.mongodb.ne
 
 // ✅ Middleware
 app.use(cors({
-  origin: [ "https://2nd-project-sigma.vercel.app"],
+  origin: ["http://localhost:5173", "https://2nd-project-sigma.vercel.app"],
   credentials: true
 }));
 app.use(express.json({ limit: '5mb' }));
