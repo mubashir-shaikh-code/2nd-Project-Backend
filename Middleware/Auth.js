@@ -9,7 +9,7 @@ const verifyToken = (req, res, next) => {
   const token = authHeader.split(' ')[1];
 
   jwt.verify(token, SECRET, (err, decoded) => {
-    if (err) return res.status(403).json({ error: 'Invalid token' });
+    if (err) return res.status(403).json({ error: 'Invalid or expired token' });
 
     req.user = decoded;
     next();
