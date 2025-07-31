@@ -5,12 +5,15 @@ const {
   postProduct,
   approveProduct,
   rejectProduct,
+  getUserProducts,
   getPendingProducts,
   updateProduct // ✅ Added
 } = require('../Controllers/ProductController');
 
 // ✅ Get all approved products (visible to users on home page)
 router.get('/', getAllProducts);
+
+router.get('/products/user', getUserProducts);
 
 // ✅ Get all pending products (only for admin panel)
 router.get('/pending', getPendingProducts); // ✅ NEW ROUTE
