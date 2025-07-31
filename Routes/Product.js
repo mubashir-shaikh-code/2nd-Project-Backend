@@ -5,19 +5,14 @@ const {
   postProduct,
   approveProduct,
   rejectProduct,
-  getUserProducts,
-  getPendingProducts,
-  updateProduct // ✅ Added
+  updateProduct
 } = require('../Controllers/ProductController');
 
 // ✅ Get all approved products (visible to users on home page)
 router.get('/', getAllProducts);
 
-
-router.get('/user-products', getUserProducts);
-
 // ✅ Get all pending products (only for admin panel)
-router.get('/pending', getPendingProducts); // ✅ NEW ROUTE
+router.get('/pending', getAllProducts); // optional, keep if admin panel needs it
 
 // ✅ Post a new product
 router.post('/', postProduct);
@@ -26,9 +21,8 @@ router.post('/', postProduct);
 router.patch('/approve/:id', approveProduct);
 router.put('/approve/:id', approveProduct);
 
-// ✅ Update product details (used in UserDashboard edit)
+// ✅ Update product details (optional, remove if not needed)
 router.put('/:id', updateProduct);
-
 
 // ✅ Reject product (admin only)
 router.patch('/reject/:id', rejectProduct);

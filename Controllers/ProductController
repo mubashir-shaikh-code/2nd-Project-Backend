@@ -22,25 +22,6 @@ const getPendingProducts = async (req, res) => {
   }
 };
 
-// ✅ Get user-specific products, split into pending & approved
-const getUserProducts = async (req, res) => {
-  try {
-    const { userEmail } = req.query;
-
-    if (!userEmail) {
-      return res.status(400).json({ error: 'User email is required' });
-    }
-
-    const approvedProducts = await Product.find({ userEmail, status: 'approved' }).sort({ createdAt: -1 });
-    const pendingProducts = await Product.find({ userEmail, status: 'pending' }).sort({ createdAt: -1 });
-
-    res.status(200).json({ approvedProducts, pendingProducts });
-  } catch (err) {
-    console.error('Error fetching user products:', err);
-    res.status(500).json({ error: 'Server error while fetching user products' });
-  }
-};
-
 // ✅ Approve a product (admin)
 const approveProduct = async (req, res) => {
   try {
@@ -81,7 +62,7 @@ const rejectProduct = async (req, res) => {
   }
 };
 
-// ✅ Post a new product (user submission)
+// ✅ Post a new product (optional: from public form or admin)
 const postProduct = async (req, res) => {
   try {
     const { description, price, image, userEmail, category } = req.body;
@@ -111,7 +92,7 @@ const postProduct = async (req, res) => {
   }
 };
 
-// ✅ Update a product (user edits)
+// ✅ Update a product (optional: admin-only if dashboard is removed)
 const updateProduct = async (req, res) => {
   try {
     const updatedProduct = await Product.findByIdAndUpdate(req.params.id, req.body, {
@@ -131,7 +112,6 @@ const updateProduct = async (req, res) => {
 module.exports = {
   getAllProducts,
   getPendingProducts,
-  getUserProducts,
   approveProduct,
   rejectProduct,
   postProduct,
