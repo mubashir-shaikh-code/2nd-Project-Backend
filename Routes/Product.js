@@ -13,7 +13,8 @@ const {
 // ✅ Get all approved products (visible to users on home page)
 router.get('/', getAllProducts);
 
-router.get('/products/user', getUserProducts);
+
+router.get('/user-products', getUserProducts);
 
 // ✅ Get all pending products (only for admin panel)
 router.get('/pending', getPendingProducts); // ✅ NEW ROUTE
