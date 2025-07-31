@@ -22,7 +22,7 @@ const getPendingProducts = async (req, res) => {
   }
 };
 
-// ✅ Get all products posted by a specific user (for user dashboard)
+// ✅ Get user-specific products, split into pending & approved
 const getUserProducts = async (req, res) => {
   try {
     const { userEmail } = req.query;
@@ -31,8 +31,10 @@ const getUserProducts = async (req, res) => {
       return res.status(400).json({ error: 'User email is required' });
     }
 
-    const products = await Product.find({ userEmail }).sort({ createdAt: -1 });
-    res.status(200).json(products);
+    const approvedProducts = await Product.find({ userEmail, status: 'approved' }).sort({ createdAt: -1 });
+    const pendingProducts = await Product.find({ userEmail, status: 'pending' }).sort({ createdAt: -1 });
+
+    res.status(200).json({ approvedProducts, pendingProducts });
   } catch (err) {
     console.error('Error fetching user products:', err);
     res.status(500).json({ error: 'Server error while fetching user products' });
