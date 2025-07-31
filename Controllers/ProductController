@@ -11,6 +11,19 @@ const getAllProducts = async (req, res) => {
   }
 };
 
+// ✅ Get products by user email
+const getUserProducts = async (req, res) => {
+  try {
+    const userEmail = req.query.email; // make sure frontend sends this in query string
+    const products = await Product.find({ userEmail }).sort({ createdAt: -1 });
+    res.status(200).json(products);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error while fetching user products' });
+  }
+};
+
+
 // ✅ Get pending products (admin only)
 const getPendingProducts = async (req, res) => {
   try {
@@ -116,4 +129,5 @@ module.exports = {
   rejectProduct,
   postProduct,
   updateProduct,
+  getUserProducts,
 };
