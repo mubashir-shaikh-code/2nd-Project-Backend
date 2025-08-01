@@ -3,9 +3,13 @@ const jwt = require('jsonwebtoken');
 const User = require('../Models/Models');
 const cloudinary = require('../Cloudinary');
 
-const SECRET_KEY = 'your_jwt_secret_key';
+const SECRET_KEY = 'your_jwt_secret_key'; // You can change this if needed
 
-// User Registration
+// ✅ Hardcoded Admin Credentials
+const ADMIN_EMAIL = 'admin@liflow.com';
+const ADMIN_PASSWORD = 'admin123';
+
+// ✅ User Registration
 const register = async (req, res) => {
   try {
     const { username, email, password, profilePic } = req.body;
@@ -39,11 +43,28 @@ const register = async (req, res) => {
   }
 };
 
-// User Login
+// ✅ User & Admin Login
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = req.body.email?.trim();
+    const password = req.body.password?.trim();
 
+    // ✅ Check for hardcoded admin
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+  const adminToken = jwt.sign({ role: 'admin' }, SECRET_KEY, { expiresIn: '60s' });
+  return res.status(200).json({
+    message: 'Admin login successful',
+    token: adminToken,
+    user: {
+      username: 'Admin',
+      email: ADMIN_EMAIL,
+      profilePic: '',
+    },
+    isAdmin: true,
+  });
+}
+
+    // ✅ Regular user login
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ error: 'Invalid credentials' });
 
@@ -53,7 +74,7 @@ const login = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, email: user.email },
       SECRET_KEY,
-      { expiresIn: '60s' } // Set expiry to 60 seconds
+      { expiresIn: '60s' }
     );
 
     res.status(200).json({
@@ -64,11 +85,13 @@ const login = async (req, res) => {
         email: user.email,
         profilePic: user.profilePic,
       },
+      isAdmin: false,
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Login failed' });
   }
 };
+
 
 module.exports = { register, login };
