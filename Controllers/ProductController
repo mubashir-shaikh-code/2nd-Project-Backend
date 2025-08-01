@@ -14,7 +14,7 @@ const getAllProducts = async (req, res) => {
 // ✅ Get products by user ID
 const getUserProducts = async (req, res) => {
   try {
-    const products = await Product.find({ userId: req.user._id }).sort({ createdAt: -1 });
+    const products = await Product.find({ userId: req.user.id }).sort({ createdAt: -1 });
     res.status(200).json(products);
   } catch (err) {
     console.error(err);
