@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const authenticateUser = require('../Middleware/Auth');
 
 const {
   getAllProducts,
@@ -8,14 +9,19 @@ const {
   rejectProduct,
   getUserProducts,
   getPendingProducts,
-  updateProduct
+  updateProduct,
+  deleteProduct
 } = require('../Controllers/ProductController');
 
 // ✅ Get all approved products (visible to users on home page)
 router.get('/', getAllProducts);
 
+// ✅ Delete product
+router.delete('/:id', deleteProduct);
+
+
 // ✅ Get products of a specific user
-router.get('/products/user', getUserProducts);
+router.get('/user',authenticateUser, getUserProducts);
 
 // ✅ Get all pending products (only for admin panel)
 router.get('/pending', getPendingProducts);

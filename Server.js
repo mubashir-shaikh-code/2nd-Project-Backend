@@ -1,40 +1,44 @@
+// Remove duplicate route mounting and add error handling
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 
 const app = express();
 
-const MONGO_URI = 'mongodb+srv://mubashiraijaz1:1234@cluster0.4jnkxno.mongodb.net/liflow';
-
-// ✅ Middleware
+// Enhanced CORS configuration
 app.use(cors({
-  origin: ["http://localhost:5173", "https://2nd-project-sigma.vercel.app"],
-  credentials: true
+  origin: [
+    "http://localhost:5173", 
+    "https://2nd-project-sigma.vercel.app"
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.use(express.json({ limit: '5mb' }));
 
-// ✅ Routes
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Routes
 app.use('/api/auth', require('./Routes/Auth'));
 app.use('/api/products', require('./Routes/Product'));
-// app.use('/api/admin', require('./Routes/Admin'));
 
-const productRoutes = require('./Routes/Product');
-app.use('/api/products', productRoutes);
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
 
-
-// ✅ Connect to MongoDB and start server
-mongoose.connect(MONGO_URI)
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI || 'mongodb+srv://mubashiraijaz1:1234@cluster0.4jnkxno.mongodb.net/liflow')
   .then(() => {
     console.log('✅ MongoDB Connected');
-    app.listen(5000, () => {
-      console.log('Server running on port 5000');
+    const port = process.env.PORT || 5000;
+    app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
     });
   })
   .catch((err) => {
     console.error('MongoDB Connection Error:', err);
+    process.exit(1);
   });
-
-// ✅ 404 fallback
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
