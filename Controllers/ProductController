@@ -1,141 +1,141 @@
-const Product = require('../Models/Product');
-const cloudinary = require('../Cloudinary');
+  const Product = require('../Models/Product');
+  const cloudinary = require('../Cloudinary');
 
-// ✅ Get all approved products
-const getAllProducts = async (req, res) => {
-  try {
-    const products = await Product.find({ status: 'approved' }).sort({ createdAt: -1 });
-    res.status(200).json(products);
-  } catch (err) {
-    res.status(500).json({ error: 'Server Error' });
-  }
-};
-
-// ✅ Get products by user ID
-const getUserProducts = async (req, res) => {
-  try {
-    const products = await Product.find({ userId: req.user.id }).sort({ createdAt: -1 });
-    res.status(200).json(products);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error while fetching user products' });
-  }
-};
-
-// ✅ Get pending products (admin only)
-const getPendingProducts = async (req, res) => {
-  try {
-    const pendingProducts = await Product.find({ status: 'pending' }).sort({ createdAt: -1 });
-    res.status(200).json(pendingProducts);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server Error' });
-  }
-};
-
-// ✅ Approve product
-const approveProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updatedProduct = await Product.findByIdAndUpdate(
-      id,
-      { status: 'approved' },
-      { new: true }
-    );
-    if (!updatedProduct) {
-      return res.status(404).json({ error: 'Product not found' });
+  // ✅ Get all approved products
+  const getAllProducts = async (req, res) => {
+    try {
+      const products = await Product.find({ status: 'approved' }).sort({ createdAt: -1 });
+      res.status(200).json(products);
+    } catch (err) {
+      res.status(500).json({ error: 'Server Error' });
     }
-    res.status(200).json({ message: 'Product approved successfully', product: updatedProduct });
-  } catch (err) {
-    console.error('Error approving product:', err);
-    res.status(500).json({ error: 'Server error while approving product' });
-  }
-};
+  };
 
-// ✅ Reject/Delete a product
-const rejectProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const rejectedProduct = await Product.findByIdAndDelete(id);
-    if (!rejectedProduct) {
-      return res.status(404).json({ error: 'Product not found' });
+  // ✅ Get products by user ID
+  const getUserProducts = async (req, res) => {
+    try {
+      const userId = req.user.id; // assuming `id` is in your token
+      const products = await Product.find({ userId });
+      res.json(products);
+    } catch (err) {
+      res.status(500).json({ error: 'Server error' });
     }
-    res.status(200).json({ message: 'Product rejected and removed successfully' });
-  } catch (err) {
-    console.error('Error rejecting product:', err);
-    res.status(500).json({ error: 'Server error while rejecting product' });
-  }
-};
+  };
 
-// ✅ Post a new product
-const postProduct = async (req, res) => {
-  try {
-    const { description, price, image, category } = req.body;
-    const userId = req.user.id;
-    const userEmail = req.user.email;
-
-    if (!description || !price || !image || !userEmail || !category) {
-      return res.status(400).json({ error: 'All fields are required' });
+  // ✅ Get pending products (admin only)
+  const getPendingProducts = async (req, res) => {
+    try {
+      const pendingProducts = await Product.find({ status: 'pending' }).sort({ createdAt: -1 });
+      res.status(200).json(pendingProducts);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Server Error' });
     }
+  };
 
-    const uploadRes = await cloudinary.uploader.upload(image, {
-      folder: 'products',
-    });
-
-    const newProduct = new Product({
-      description,
-      price,
-      image: uploadRes.secure_url,
-      userEmail,
-      userId,
-      category,
-      status: 'pending',
-    });
-
-    const savedProduct = await newProduct.save();
-    res.status(201).json({ message: 'Product submitted for approval', product: savedProduct });
-  } catch (err) {
-    console.error('Error posting product:', err);
-    res.status(500).json({ error: 'Server error while posting product' });
-  }
-};
-
-// ✅ Delete product
-const deleteProduct = async (req, res) => {
-  try {
-    const productId = req.params.id;
-    await Product.findByIdAndDelete(productId);
-    res.status(200).json({ message: 'Product deleted successfully' });
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to delete product', error: err.message });
-  }
-};
-
-
-// ✅ Update product
-const updateProduct = async (req, res) => {
-  try {
-    const updatedProduct = await Product.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-
-    if (!updatedProduct) {
-      return res.status(404).json({ message: 'Product not found' });
+  // ✅ Approve product
+  const approveProduct = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updatedProduct = await Product.findByIdAndUpdate(
+        id,
+        { status: 'approved' },
+        { new: true }
+      );
+      if (!updatedProduct) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+      res.status(200).json({ message: 'Product approved successfully', product: updatedProduct });
+    } catch (err) {
+      console.error('Error approving product:', err);
+      res.status(500).json({ error: 'Server error while approving product' });
     }
+  };
 
-    res.status(200).json(updatedProduct);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+  // ✅ Reject/Delete a product
+  const rejectProduct = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const rejectedProduct = await Product.findByIdAndDelete(id);
+      if (!rejectedProduct) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+      res.status(200).json({ message: 'Product rejected and removed successfully' });
+    } catch (err) {
+      console.error('Error rejecting product:', err);
+      res.status(500).json({ error: 'Server error while rejecting product' });
+    }
+  };
 
-module.exports = {
-  getAllProducts,
-  getPendingProducts,
-  approveProduct,
-  deleteProduct,
-  rejectProduct,
-  postProduct,
-  updateProduct,
-  getUserProducts,
-};
+  // ✅ Post a new product
+  const postProduct = async (req, res) => {
+    try {
+      const { description, price, image, category } = req.body;
+      const userId = req.user.id;
+      const userEmail = req.user.email;
+
+      if (!description || !price || !image || !userEmail || !category) {
+        return res.status(400).json({ error: 'All fields are required' });
+      }
+
+      const uploadRes = await cloudinary.uploader.upload(image, {
+        folder: 'products',
+      });
+
+      const newProduct = new Product({
+        description,
+        price,
+        image: uploadRes.secure_url,
+        userEmail,
+        userId,
+        category,
+        status: 'pending',
+      });
+
+      const savedProduct = await newProduct.save();
+      res.status(201).json({ message: 'Product submitted for approval', product: savedProduct });
+    } catch (err) {
+      console.error('Error posting product:', err);
+      res.status(500).json({ error: 'Server error while posting product' });
+    }
+  };
+
+  // ✅ Delete product
+  const deleteProduct = async (req, res) => {
+    try {
+      const productId = req.params.id;
+      await Product.findByIdAndDelete(productId);
+      res.status(200).json({ message: 'Product deleted successfully' });
+    } catch (err) {
+      res.status(500).json({ message: 'Failed to delete product', error: err.message });
+    }
+  };
+
+
+  // ✅ Update product
+  const updateProduct = async (req, res) => {
+    try {
+      const updatedProduct = await Product.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+      });
+
+      if (!updatedProduct) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+
+      res.status(200).json(updatedProduct);
+    } catch (err) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  };
+
+  module.exports = {
+    getAllProducts,
+    getPendingProducts,
+    approveProduct,
+    deleteProduct,
+    rejectProduct,
+    postProduct,
+    updateProduct,
+    getUserProducts,
+  };

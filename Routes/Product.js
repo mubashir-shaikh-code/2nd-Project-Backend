@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const authenticateUser = require('../Middleware/Auth');
+const verifyToken = require('../Middleware/Auth');
 
 const {
   getAllProducts,
@@ -13,29 +13,20 @@ const {
   deleteProduct
 } = require('../Controllers/ProductController');
 
-// ✅ Get all approved products (visible to users on home page)
+// ✅ Public
 router.get('/', getAllProducts);
 
-// ✅ Delete product
-router.delete('/:id', deleteProduct);
+// ✅ Authenticated
+router.get('/user', verifyToken, getUserProducts);
+router.post('/', verifyToken, postProduct);
+router.get('/pending', verifyToken, getPendingProducts);
 
+// ✅ Admin (you can add admin check inside controller or a separate middleware)
+router.patch('/approve/:id', verifyToken, approveProduct);
+router.patch('/reject/:id', verifyToken, rejectProduct);
 
-// ✅ Get products of a specific user
-router.get('/user',authenticateUser, getUserProducts);
-
-// ✅ Get all pending products (only for admin panel)
-router.get('/pending', getPendingProducts);
-
-// ✅ Post a new product
-router.post('/', postProduct);
-
-// ✅ Approve product (admin only)
-router.patch('/approve/:id', approveProduct);
-
-// ✅ Reject product (admin only)
-router.patch('/reject/:id', rejectProduct);
-
-// ✅ Update product details
-router.put('/:id', updateProduct);
+// ✅ Edit/Delete
+router.put('/:id', verifyToken, updateProduct);
+router.delete('/:id', verifyToken, deleteProduct);
 
 module.exports = router;

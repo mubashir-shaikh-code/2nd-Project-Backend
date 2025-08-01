@@ -15,8 +15,7 @@ app.use(express.json({ limit: '5mb' }));
 
 // ✅ Routes
 app.use('/api/auth', require('./Routes/Auth'));
-// app.use('/api/products', require('./Routes/Product'));
-// app.use('/api/admin', require('./Routes/Admin'));
+
 
 const productRoutes = require('./Routes/Product');
 app.use('/api/products', productRoutes);
