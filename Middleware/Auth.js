@@ -1,6 +1,4 @@
 const jwt = require('jsonwebtoken');
-
-// 🔒 Use a hardcoded secret for now (good for dev/testing only)
 const SECRET = 'your_jwt_secret_key';
 
 const verifyToken = (req, res, next) => {
@@ -11,6 +9,12 @@ const verifyToken = (req, res, next) => {
   }
 
   const token = authHeader.split(' ')[1];
+
+  // 👉 Allow admin-token (for dev only)
+  if (token === 'admin-token') {
+    req.user = { isAdmin: true, username: 'Admin' };
+    return next();
+  }
 
   try {
     const decoded = jwt.verify(token, SECRET);
