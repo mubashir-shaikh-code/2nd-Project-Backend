@@ -13,7 +13,7 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '5mb' }));
 
-const deliveryRoutes = require('./Routes/DeliveryRoutes');
+const deliveryRoutes = require('./Routes/DeliveryRoute');
 app.use('/api/delivery', deliveryRoutes);
 
 

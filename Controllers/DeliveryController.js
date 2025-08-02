@@ -56,7 +56,7 @@ const getAllOrders = async (req, res) => {
   }
 };
 
-// ✅ Get orders by user for delivery
+// ✅ Get orders by user
 const UserOrders = async (req, res) => {
   try {
     const userId = req.user.id;
