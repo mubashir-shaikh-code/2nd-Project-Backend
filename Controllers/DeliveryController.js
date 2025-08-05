@@ -21,9 +21,10 @@ const createOrder = async (req, res) => {
 // ✅ Create multiple orders from cart
 const createCartOrders = async (req, res) => {
   try {
-    const { userId, orders } = req.body;
+    const userId = req.user.id;
+    const { orders } = req.body;
 
-    if (!userId || !orders || !Array.isArray(orders)) {
+    if (!orders || !Array.isArray(orders)) {
       return res.status(400).json({ error: 'Invalid request data' });
     }
 
@@ -35,12 +36,13 @@ const createCartOrders = async (req, res) => {
       }))
     );
 
-    res.status(200).json(createdOrders);
+    res.status(201).json(createdOrders);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
+
 
 // ✅ Admin: Get all delivery orders with product & user info
 const getAllOrders = async (req, res) => {

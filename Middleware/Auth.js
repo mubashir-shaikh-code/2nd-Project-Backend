@@ -1,35 +1,37 @@
 const jwt = require('jsonwebtoken');
 
-// 🔒 Use a hardcoded secret for now (good for dev/testing only)
+// 🔐 Hardcoded JWT secret (dev only)
 const SECRET = 'your_jwt_secret_key';
 
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
-  // 🛑 Missing or badly formatted Authorization header
+  // 🛑 Authorization header missing
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Authorization token missing or malformed' });
+    console.log('❌ No Bearer token found in Authorization header');
+    return res.status(401).json({ error: 'Please login to place order' });
   }
 
   const token = authHeader.split(' ')[1];
 
-  // ✅ DEV: Allow hardcoded admin token to bypass JWT verification
+  // ✅ Allow hardcoded admin token bypass
   if (token === 'admin-token') {
     req.user = {
       isAdmin: true,
       username: 'admin',
       role: 'admin'
     };
+    console.log('✅ Admin logged in using admin-token');
     return next();
   }
 
   try {
-    // ✅ Regular token verification
     const decoded = jwt.verify(token, SECRET);
     req.user = decoded;
+    console.log('✅ Token verified, user:', decoded);
     next();
   } catch (err) {
-    // 🛑 Invalid token (expired, bad signature, etc.)
+    console.log('❌ JWT Verification failed:', err.message);
     return res.status(403).json({ error: 'Invalid or expired token' });
   }
 };
