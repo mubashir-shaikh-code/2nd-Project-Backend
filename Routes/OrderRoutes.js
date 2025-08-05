@@ -17,7 +17,7 @@ const {
 router.post('/place', verifyToken, placeOrder);
 
 // 📦 Route: Get orders of logged-in user (User)
-router.get('/user-orders', verifyToken, getUserOrders);
+router.get('/user', verifyToken, getUserOrders);
 
 // 🔒 Route: Get all orders (Admin)
 router.get('/all', verifyTokenAndAdmin, getAllOrders);
