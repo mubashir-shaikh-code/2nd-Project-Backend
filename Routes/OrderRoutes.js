@@ -8,12 +8,14 @@ const {
   updateOrderStatus
 } = require('../Controllers/OrderController');
 
+
 const {
   verifyToken,
   verifyTokenAndAdmin
 } = require('../Middleware/Auth'); // Adjust path if needed
 
-// 🛒 Route: Place an order (User)
+
+
 router.post('/place', verifyToken, placeOrder);
 
 // 📦 Route: Get orders of logged-in user (User)

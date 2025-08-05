@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 // 🔐 Hardcoded JWT secret (dev only)
 const SECRET = 'your_jwt_secret_key';
 
+// ✅ Middleware to verify token
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -36,4 +37,21 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-module.exports = verifyToken;
+// ✅ Middleware to check for admin
+const verifyTokenAndAdmin = (req, res, next) => {
+  verifyToken(req, res, () => {
+    if (req.user && req.user.isAdmin) {
+      console.log('✅ Admin access granted');
+      next();
+    } else {
+      console.log('❌ Admin access denied');
+      return res.status(403).json({ error: 'Admin access only' });
+    }
+  });
+};
+
+// ✅ Export both middlewares
+module.exports = {
+  verifyToken,
+  verifyTokenAndAdmin
+};
