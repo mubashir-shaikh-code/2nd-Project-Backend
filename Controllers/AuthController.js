@@ -3,15 +3,18 @@ const jwt = require('jsonwebtoken');
 const User = require('../Models/Models');
 const cloudinary = require('../Cloudinary');
 
+// 🔐 Hardcoded JWT secret
 const SECRET_KEY = 'your_jwt_secret_key';
 
-// 🟢 Register
+// ✅ Register controller
 const register = async (req, res) => {
   try {
     const { username, email, password, profilePic } = req.body;
 
     const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ error: 'User already exists' });
+    if (existingUser) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -34,16 +37,17 @@ const register = async (req, res) => {
 
     res.status(201).json({ message: 'User registered successfully' });
   } catch (err) {
-    console.error(err);
+    console.error('❌ Registration Error:', err);
     res.status(500).json({ error: 'Registration failed' });
   }
 };
 
-// 🟡 Login (User + Admin)
+// ✅ Login controller (admin + user)
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // 🔐 Hardcoded admin credentials
     const ADMIN_EMAIL = 'admin@liflow.com';
     const ADMIN_PASS = 'admin123';
 
@@ -52,7 +56,7 @@ const login = async (req, res) => {
       const token = jwt.sign(
         { email, role: 'admin', isAdmin: true },
         SECRET_KEY,
-        { expiresIn: '1h' } // Use longer expiry for real use
+        { expiresIn: '1h' }
       );
 
       return res.status(200).json({
@@ -67,7 +71,7 @@ const login = async (req, res) => {
       });
     }
 
-    // ✅ Normal user login
+    // 🔁 Normal user login
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ error: 'Invalid credentials' });
 
@@ -75,7 +79,7 @@ const login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
 
     const token = jwt.sign(
-      { id: user._id, email: user.email, role: 'user' },
+      { id: user._id, email: user.email, isAdmin: false },
       SECRET_KEY,
       { expiresIn: '1h' }
     );
@@ -91,7 +95,7 @@ const login = async (req, res) => {
       isAdmin: false,
     });
   } catch (err) {
-    console.error(err);
+    console.error('❌ Login Error:', err);
     res.status(500).json({ error: 'Login failed' });
   }
 };
