@@ -7,7 +7,7 @@ const {
   updateOrderStatus,
 } = require('../Controllers/OrderController');
 
-const { verifyToken, verifyTokenAndAdmin } = require('../middleware/authMiddleware'); // ✅ Your JWT middleware
+const { verifyToken, verifyTokenAndAdmin } = require('../Middleware/Auth'); // ✅ Your JWT middleware
 
 // ✅ User places an order
 router.post('/place', verifyToken, placeOrder);
