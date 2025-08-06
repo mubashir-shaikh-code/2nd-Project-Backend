@@ -1,11 +1,12 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { User, Order } = require('../Models/Models');
+const User = require('../Models/Models');
 const cloudinary = require('../Cloudinary');
 
+// 🔐 Hardcoded JWT secret
 const SECRET_KEY = 'your_jwt_secret_key';
 
-// ✅ Register
+// ✅ Register controller
 const register = async (req, res) => {
   try {
     const { username, email, password, profilePic } = req.body;
@@ -41,14 +42,16 @@ const register = async (req, res) => {
   }
 };
 
-// ✅ Login
+// ✅ Login controller (admin + user)
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // 🔐 Hardcoded admin credentials
     const ADMIN_EMAIL = 'admin@liflow.com';
     const ADMIN_PASS = 'admin123';
 
+    // ✅ Admin login
     if (email === ADMIN_EMAIL && password === ADMIN_PASS) {
       const token = jwt.sign(
         { email, role: 'admin', isAdmin: true },
@@ -68,6 +71,7 @@ const login = async (req, res) => {
       });
     }
 
+    // 🔁 Normal user login
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ error: 'Invalid credentials' });
 
@@ -87,7 +91,6 @@ const login = async (req, res) => {
         username: user.username,
         email: user.email,
         profilePic: user.profilePic,
-        id: user._id,
       },
       isAdmin: false,
     });
@@ -97,63 +100,4 @@ const login = async (req, res) => {
   }
 };
 
-
-
-// 🟦 Place order (called when user clicks 'Place Order')
-const placeOrder = async (req, res) => {
-  try {
-    const orders = req.body; // should be an array of product objects
-    const newOrders = await Order.insertMany(orders);
-    res.status(201).json(newOrders);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// 🟦 Get user's orders
-const getUserOrders = async (req, res) => {
-  try {
-    const userId = req.params.userId;
-    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
-    res.status(200).json(orders);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// 🟦 Get all orders (admin)
-const getAllOrders = async (req, res) => {
-  try {
-    const orders = await Order.find().sort({ createdAt: -1 });
-    res.status(200).json(orders);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// 🟦 Update delivery status (admin)
-const updateOrderStatus = async (req, res) => {
-  try {
-    const { status } = req.body;
-    const orderId = req.params.orderId;
-
-    const updated = await Order.findByIdAndUpdate(
-      orderId,
-      { status },
-      { new: true }
-    );
-
-    res.status(200).json(updated);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-module.exports = {
-  register,
-  login,
-  placeOrder,
-  getUserOrders,
-  getAllOrders,
-  updateOrderStatus
-};
+module.exports = { register, login };
