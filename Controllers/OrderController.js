@@ -1,44 +1,82 @@
 const Order = require('../Models/Order');
 
-exports.placeOrder = async (req, res) => {
-  const { productId, price } = req.body;
-  const userId = req.user._id; // ✅ Extracted from JWT
-
+// ✅ Place a new order
+const placeOrder = async (req, res) => {
   try {
-    const order = new Order({ user: userId, product: productId, price });
+    const { productId, price } = req.body;
+
+    if (!productId || !price) {
+      return res.status(400).json({ error: 'Missing productId or price' });
+    }
+
+    const userId = req.user._id;
+
+    const order = new Order({
+      product: productId, 
+      price,
+      user: userId
+    });
+
     await order.save();
-    res.status(201).json(order);
+    console.log('✅ Order placed:', order);
+    res.status(201).json({ message: 'Order placed successfully', order });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('❌ Order placement failed:', err.message);
+    res.status(500).json({ error: 'Failed to place order' });
   }
 };
 
-exports.getUserOrders = async (req, res) => {
-  const userId = req.user._id; // ✅ Extracted from JWT
-
+// ✅ Get orders for logged-in user
+const getUserOrders = async (req, res) => {
   try {
+    const userId = req.user._id;
+
     const orders = await Order.find({ user: userId }).populate('product');
-    res.json(orders);
+    res.status(200).json(orders);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('❌ Failed to fetch user orders:', err.message);
+    res.status(500).json({ error: 'Failed to fetch user orders' });
   }
 };
 
-exports.getAllOrders = async (req, res) => {
+// ✅ Get all orders (admin only)
+const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find().populate('product').populate('user');
-    res.json(orders);
+    res.status(200).json(orders);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('❌ Failed to fetch all orders:', err.message);
+    res.status(500).json({ error: 'Failed to fetch all orders' });
   }
 };
 
-exports.updateOrderStatus = async (req, res) => {
+// ✅ Update order status
+const updateOrderStatus = async (req, res) => {
   try {
+    const { orderId } = req.params;
     const { status } = req.body;
-    const order = await Order.findByIdAndUpdate(req.params.orderId, { status }, { new: true });
-    res.json(order);
+
+    if (!status) {
+      return res.status(400).json({ error: 'Missing status value' });
+    }
+
+    const order = await Order.findByIdAndUpdate(orderId, { status }, { new: true });
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    console.log('✅ Order status updated:', order);
+    res.status(200).json(order);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('❌ Failed to update order status:', err.message);
+    res.status(500).json({ error: 'Failed to update order status' });
   }
+};
+
+module.exports = {
+  placeOrder,
+  getUserOrders,
+  getAllOrders,
+  updateOrderStatus
 };
