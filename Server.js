@@ -14,6 +14,9 @@ app.use(cors({
 app.use(express.json({ limit: '5mb' }));
 
 
+const orderRoutes = require('./Routes/OrderRoutes');
+app.use('/api/orders', orderRoutes);
+
 // ✅ Routes
 app.use('/api/auth', require('./Routes/Auth'));
 
