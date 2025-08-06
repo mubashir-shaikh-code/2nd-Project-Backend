@@ -5,6 +5,7 @@
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     profilePic: { type: String }, // Optional: base64 or file path
+    isAdmin: { type: Boolean, default: false }
   });
 
 

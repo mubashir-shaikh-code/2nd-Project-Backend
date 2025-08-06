@@ -79,7 +79,7 @@ const login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
 
     const token = jwt.sign(
-      { id: user._id, email: user.email, isAdmin: false },
+      { id: user._id, email: user.email, isAdmin: user.isAdmin },
       SECRET_KEY,
       { expiresIn: '1h' }
     );
@@ -92,7 +92,7 @@ const login = async (req, res) => {
         email: user.email,
         profilePic: user.profilePic,
       },
-      isAdmin: false,
+      isAdmin: user.isAdmin || false,
     });
   } catch (err) {
     console.error('❌ Login Error:', err);
