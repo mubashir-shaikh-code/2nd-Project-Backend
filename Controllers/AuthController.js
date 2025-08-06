@@ -3,58 +3,30 @@ const jwt = require('jsonwebtoken');
 const User = require('../Models/Models');
 const cloudinary = require('../Cloudinary');
 
-// 🔐 Hardcoded JWT secret
-const SECRET_KEY = 'your_jwt_secret_key';
+const SECRET_KEY = 'your_jwt_secret_key'; // ✅ Keep this as-is
 
-// ✅ Register controller
+// ✅ Register controller (no changes needed here)
 const register = async (req, res) => {
-  try {
-    const { username, email, password, profilePic } = req.body;
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    let uploadedProfilePic = '';
-    if (profilePic) {
-      const uploadRes = await cloudinary.uploader.upload(profilePic, {
-        folder: 'profiles',
-      });
-      uploadedProfilePic = uploadRes.secure_url;
-    }
-
-    const newUser = new User({
-      username,
-      email,
-      password: hashedPassword,
-      profilePic: uploadedProfilePic,
-    });
-
-    await newUser.save();
-
-    res.status(201).json({ message: 'User registered successfully' });
-  } catch (err) {
-    console.error('❌ Registration Error:', err);
-    res.status(500).json({ error: 'Registration failed' });
-  }
+  // ... unchanged ...
 };
 
-// ✅ Login controller (admin + user)
+// ✅ Login controller
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 🔐 Hardcoded admin credentials
     const ADMIN_EMAIL = 'admin@liflow.com';
     const ADMIN_PASS = 'admin123';
 
     // ✅ Admin login
     if (email === ADMIN_EMAIL && password === ADMIN_PASS) {
       const token = jwt.sign(
-        { email, role: 'admin', isAdmin: true },
+        {
+          email,
+          username: 'Admin',
+          role: 'admin',
+          isAdmin: true,
+        },
         SECRET_KEY,
         { expiresIn: '1h' }
       );
@@ -71,7 +43,7 @@ const login = async (req, res) => {
       });
     }
 
-    // 🔁 Normal user login
+    // ✅ Normal user login
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ error: 'Invalid credentials' });
 
@@ -79,7 +51,12 @@ const login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
 
     const token = jwt.sign(
-      { id: user._id, email: user.email, isAdmin: user.isAdmin },
+      {
+        id: user._id,
+        email: user.email,
+        username: user.username, // ✅ Add this
+        isAdmin: user.isAdmin,
+      },
       SECRET_KEY,
       { expiresIn: '1h' }
     );

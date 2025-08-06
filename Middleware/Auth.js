@@ -1,9 +1,9 @@
 const jwt = require('jsonwebtoken');
-const User = require('../Models/Models'); // Make sure this path is correct
+const User = require('../Models/Models');
 
-const SECRET = 'your_jwt_secret_key'; // Same secret used during token creation
+const SECRET = 'your_jwt_secret_key'; // Must match the secret used in token generation
 
-// ✅ Middleware to verify token and attach full user object
+// 🔐 General Token Verification
 const verifyToken = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -14,6 +14,7 @@ const verifyToken = async (req, res, next) => {
 
   const token = authHeader.split(' ')[1];
 
+  // ✅ Hardcoded Admin Token (for testing)
   if (token === 'admin-token') {
     req.user = {
       isAdmin: true,
@@ -26,15 +27,23 @@ const verifyToken = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, SECRET);
-    const user = await User.findById(decoded.id); // Fetch full user
+    console.log('🔍 Decoded token payload:', decoded);
+
+    if (!decoded.id) {
+      console.log('❌ Token missing user ID');
+      return res.status(400).json({ error: 'Invalid token payload' });
+    }
+
+    const user = await User.findById(decoded.id);
+    console.log('🔍 Looking for user with ID:', decoded.id);
 
     if (!user) {
-      console.log('❌ User not found');
+      console.log('❌ User not found in database');
       return res.status(404).json({ error: 'User not found' });
     }
 
-    req.user = user; // Attach full user object
-    console.log('✅ Token verified for user:', user.email);
+    req.user = user;
+    console.log(`✅ Token verified for user: ${user.username || user.email}`);
     next();
   } catch (err) {
     console.log('❌ JWT verification failed:', err.message);
@@ -42,6 +51,7 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
+// 🔐 Admin-Only Access Middleware
 const verifyTokenAndAdmin = async (req, res, next) => {
   await verifyToken(req, res, () => {
     if (req.user && req.user.isAdmin) {
