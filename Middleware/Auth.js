@@ -1,35 +1,23 @@
 const jwt = require('jsonwebtoken');
 
-// 🔐 Hardcoded JWT secret (dev only)
-const SECRET = 'your_jwt_secret_key';
+// ✅ Use a secure environment variable in production
+const SECRET = 'your_jwt_secret_key'; // Change to process.env.JWT_SECRET in production
 
-// ✅ Middleware to verify token
+// ✅ Middleware to verify token for any user
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
-  // 🛑 Authorization header missing
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     console.log('❌ No Bearer token found in Authorization header');
-    return res.status(401).json({ error: 'Please login to place order' });
+    return res.status(401).json({ error: 'Please login to continue' });
   }
 
   const token = authHeader.split(' ')[1];
 
-  // ✅ Allow hardcoded admin token bypass
-  if (token === 'admin-token') {
-    req.user = {
-      isAdmin: true,
-      username: 'admin',
-      role: 'admin'
-    };
-    console.log('✅ Admin logged in using admin-token');
-    return next();
-  }
-
   try {
     const decoded = jwt.verify(token, SECRET);
-    req.user = decoded;
-    console.log('✅ Token verified, user:', decoded);
+    req.user = decoded; // decoded includes isAdmin and id from token
+    console.log('✅ Token verified:', decoded);
     next();
   } catch (err) {
     console.log('❌ JWT Verification failed:', err.message);
@@ -37,7 +25,7 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-// ✅ Middleware to check for admin
+// ✅ Middleware to verify token and check admin access
 const verifyTokenAndAdmin = (req, res, next) => {
   verifyToken(req, res, () => {
     if (req.user && req.user.isAdmin) {
@@ -50,7 +38,6 @@ const verifyTokenAndAdmin = (req, res, next) => {
   });
 };
 
-// ✅ Export both middlewares
 module.exports = {
   verifyToken,
   verifyTokenAndAdmin

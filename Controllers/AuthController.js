@@ -5,7 +5,7 @@ const cloudinary = require('../Cloudinary');
 
 const SECRET_KEY = 'your_jwt_secret_key';
 
-// 🟢 User Registration
+// 🟢 Register
 const register = async (req, res) => {
   try {
     const { username, email, password, profilePic } = req.body;
@@ -39,17 +39,21 @@ const register = async (req, res) => {
   }
 };
 
-// 🟡 User + Admin Login
+// 🟡 Login (User + Admin)
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // ✅ Hardcoded admin login
     const ADMIN_EMAIL = 'admin@liflow.com';
     const ADMIN_PASS = 'admin123';
 
+    // ✅ Admin login
     if (email === ADMIN_EMAIL && password === ADMIN_PASS) {
-      const token = jwt.sign({ email, role: 'admin' }, SECRET_KEY, { expiresIn: '60s' });
+      const token = jwt.sign(
+        { email, role: 'admin', isAdmin: true },
+        SECRET_KEY,
+        { expiresIn: '1h' } // Use longer expiry for real use
+      );
 
       return res.status(200).json({
         message: 'Admin login successful',
@@ -63,7 +67,7 @@ const login = async (req, res) => {
       });
     }
 
-    // 🔁 Normal user login
+    // ✅ Normal user login
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ error: 'Invalid credentials' });
 
@@ -71,9 +75,9 @@ const login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
 
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      { id: user._id, email: user.email, role: 'user' },
       SECRET_KEY,
-      { expiresIn: '60s' }
+      { expiresIn: '1h' }
     );
 
     res.status(200).json({
