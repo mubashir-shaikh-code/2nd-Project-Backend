@@ -74,9 +74,58 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+// PATCH /api/orders/cancel/:orderId
+const requestOrderCancellation = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.orderId);
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Optional: Check if the order belongs to the logged-in user
+    if (order.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to cancel this order' });
+    }
+
+    order.cancelRequest = true;
+    await order.save();
+
+    res.status(200).json({ message: 'Cancellation request sent successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+// PATCH /api/orders/cancel/approve/:orderId
+const approveOrderCancellation = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.orderId);
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Optional: Check if cancellation was requested
+    if (!order.cancelRequest) {
+      return res.status(400).json({ message: 'No cancellation request found for this order' });
+    }
+
+    order.cancelApproved = true;
+    await order.save();
+
+    res.status(200).json({ message: 'Order cancellation approved' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+
 module.exports = {
   placeOrder,
   getUserOrders,
   getAllOrders,
-  updateOrderStatus
+  updateOrderStatus,
+  requestOrderCancellation,
+  approveOrderCancellation
 };

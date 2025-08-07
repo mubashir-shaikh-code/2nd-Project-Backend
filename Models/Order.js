@@ -9,6 +9,15 @@ const orderSchema = new mongoose.Schema({
     enum: ['Processing', 'Dispatched', 'Delivered'],
     default: 'Processing',
   },
+  cancelRequest: {
+  type: Boolean,
+  default: false
+},
+cancelApproved: {
+  type: Boolean,
+  default: false
+}
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);

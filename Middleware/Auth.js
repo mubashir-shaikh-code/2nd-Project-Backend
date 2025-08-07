@@ -51,7 +51,7 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
-// 🔐 Admin-Only Access Middleware
+// 🔐 Admin-Only Access Middleware (chained with verifyToken)
 const verifyTokenAndAdmin = async (req, res, next) => {
   await verifyToken(req, res, () => {
     if (req.user && req.user.isAdmin) {
@@ -64,7 +64,19 @@ const verifyTokenAndAdmin = async (req, res, next) => {
   });
 };
 
+// 🔐 Standalone Admin Middleware (for use after verifyToken)
+const admin = (req, res, next) => {
+  if (req.user && req.user.isAdmin) {
+    console.log('✅ Admin middleware passed');
+    next();
+  } else {
+    console.log('❌ Admin middleware failed');
+    return res.status(403).json({ error: 'Admin access only' });
+  }
+};
+
 module.exports = {
   verifyToken,
-  verifyTokenAndAdmin
+  verifyTokenAndAdmin,
+  admin
 };
