@@ -24,7 +24,7 @@ router.get('/admin', verifyTokenAndAdmin, getAllOrders);
 router.put('/admin/:orderId', verifyTokenAndAdmin, updateOrderStatus);
 
 // User requests cancellation
-router.patch('/cancel/:orderId', requestOrderCancellation);
+router.patch('/cancel/:orderId', verifyToken, requestOrderCancellation);
 
 // Admin approves cancellation
 router.patch('/cancel/approve/:orderId', admin, approveOrderCancellation);
