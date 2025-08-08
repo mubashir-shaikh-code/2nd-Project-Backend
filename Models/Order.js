@@ -6,7 +6,7 @@ const orderSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   status: {
     type: String,
-    enum: ['Processing', 'Dispatched', 'Delivered'],
+    enum: ['Processing', 'Dispatched', 'Delivered', 'Cancelled'],
     default: 'Processing',
   },
   cancelRequest: {
