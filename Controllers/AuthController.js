@@ -5,9 +5,29 @@ const cloudinary = require('../Cloudinary');
 
 const SECRET_KEY = 'your_jwt_secret_key'; // ✅ Keep this as-is
 
-// ✅ Register controller (no changes needed here)
+// ✅ Register controller
 const register = async (req, res) => {
-  // ... unchanged ...
+  try {
+    const { username, email, password } = req.body;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(400).json({ error: 'Email already in use' });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword,
+    });
+
+    await newUser.save();
+
+    res.status(201).json({ message: 'User registered successfully' });
+  } catch (err) {
+    console.error('❌ Register Error:', err);
+    res.status(500).json({ error: 'Registration failed' });
+  }
 };
 
 // ✅ Login controller
@@ -54,7 +74,7 @@ const login = async (req, res) => {
       {
         id: user._id,
         email: user.email,
-        username: user.username, // ✅ Add this
+        username: user.username,
         isAdmin: user.isAdmin,
       },
       SECRET_KEY,
@@ -77,4 +97,48 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+// ✅ Get user profile
+const getUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    console.error('❌ Profile Fetch Error:', err);
+    res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+};
+
+// ✅ Update user profile
+const updateUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    user.username = req.body.username || user.username;
+    user.profilePic = req.body.profilePic || user.profilePic;
+
+    if (req.body.password) {
+      user.password = await bcrypt.hash(req.body.password, 10);
+    }
+
+    const updatedUser = await user.save();
+
+    res.json({
+      _id: updatedUser._id,
+      username: updatedUser.username,
+      email: updatedUser.email,
+      profilePic: updatedUser.profilePic,
+    });
+  } catch (err) {
+    console.error('❌ Profile Update Error:', err);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+};
+
+module.exports = {
+  register,
+  login,
+  getUserProfile,
+  updateUserProfile,
+};

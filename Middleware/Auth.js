@@ -1,10 +1,8 @@
 const jwt = require('jsonwebtoken');
-const User = require('../Models/Models');
-
 const SECRET = 'your_jwt_secret_key'; // Must match the secret used in token generation
 
 // 🔐 General Token Verification
-const verifyToken = async (req, res, next) => {
+const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -17,9 +15,11 @@ const verifyToken = async (req, res, next) => {
   // ✅ Hardcoded Admin Token (for testing)
   if (token === 'admin-token') {
     req.user = {
+      id: 'admin-id',
       isAdmin: true,
       username: 'admin',
-      role: 'admin'
+      role: 'admin',
+      email: 'admin@liflow.com'
     };
     console.log('✅ Admin logged in using hardcoded token');
     return next();
@@ -34,16 +34,8 @@ const verifyToken = async (req, res, next) => {
       return res.status(400).json({ error: 'Invalid token payload' });
     }
 
-    const user = await User.findById(decoded.id);
-    console.log('🔍 Looking for user with ID:', decoded.id);
-
-    if (!user) {
-      console.log('❌ User not found in database');
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    req.user = user;
-    console.log(`✅ Token verified for user: ${user.username || user.email}`);
+    req.user = decoded; // ✅ Attach decoded payload (includes id, email, etc.)
+    console.log(`✅ Token verified for user: ${decoded.username || decoded.email}`);
     next();
   } catch (err) {
     console.log('❌ JWT verification failed:', err.message);
@@ -52,8 +44,8 @@ const verifyToken = async (req, res, next) => {
 };
 
 // 🔐 Admin-Only Access Middleware (chained with verifyToken)
-const verifyTokenAndAdmin = async (req, res, next) => {
-  await verifyToken(req, res, () => {
+const verifyTokenAndAdmin = (req, res, next) => {
+  verifyToken(req, res, () => {
     if (req.user && req.user.isAdmin) {
       console.log('✅ Admin access granted');
       next();
