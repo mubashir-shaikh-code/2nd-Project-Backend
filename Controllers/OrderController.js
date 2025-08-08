@@ -60,19 +60,29 @@ const updateOrderStatus = async (req, res) => {
       return res.status(400).json({ error: 'Missing status value' });
     }
 
-    const order = await Order.findByIdAndUpdate(orderId, { status }, { new: true });
+    const order = await Order.findById(orderId);
 
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
 
+    order.status = status;
+
+    // ✅ If status is "Cancelled", mark cancelApproved
+    if (status === 'Cancelled') {
+      order.cancelApproved = true;
+    }
+
+    await order.save();
+
     console.log('✅ Order status updated:', order);
-    res.status(200).json(order);
+    res.status(200).json(order); // ✅ Return updated order
   } catch (err) {
     console.error('❌ Failed to update order status:', err.message);
     res.status(500).json({ error: 'Failed to update order status' });
   }
 };
+
 
 // PATCH /api/orders/cancel/:orderId
 const requestOrderCancellation = async (req, res) => {
