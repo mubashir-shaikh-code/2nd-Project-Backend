@@ -118,9 +118,10 @@ const updateUserProfile = async (req, res) => {
     user.username = req.body.username || user.username;
     user.profilePic = req.body.profilePic || user.profilePic;
 
-    if (req.body.password) {
-      user.password = await bcrypt.hash(req.body.password, 10);
-    }
+    if (req.body.password && req.body.password.trim() !== '') {
+  user.password = await bcrypt.hash(req.body.password, 10);
+}
+
 
     const updatedUser = await user.save();
 
