@@ -109,19 +109,29 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-// ✅ Update user profile
+// ✅ Update user profile (with email check)
 const updateUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
+    // ✅ Check for email change and uniqueness
+    if (req.body.email && req.body.email !== user.email) {
+      const emailExists = await User.findOne({ email: req.body.email });
+      if (emailExists) {
+        return res.status(400).json({ error: 'Email already in use' });
+      }
+      user.email = req.body.email;
+    }
+
+    // ✅ Update other fields
     user.username = req.body.username || user.username;
     user.profilePic = req.body.profilePic || user.profilePic;
 
+    // ✅ Update password if provided
     if (req.body.password && req.body.password.trim() !== '') {
-  user.password = await bcrypt.hash(req.body.password, 10);
-}
-
+      user.password = await bcrypt.hash(req.body.password, 10);
+    }
 
     const updatedUser = await user.save();
 
