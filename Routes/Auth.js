@@ -3,6 +3,12 @@ const router = express.Router();
 const { register, login } = require('../Controllers/AuthController');
 const { getUserProfile, updateUserProfile } = require('../Controllers/AuthController');
 const { verifyToken } = require('../Middleware/Auth');
+const sendOtp = require('../OtpVerification/SendOtp');
+const verifyOtp = require('../OtpVerification/VerifyOtp');
+
+//Otp Verification routes
+router.post('/send-otp', sendOtp);
+router.post('/verify-otp', verifyOtp);
 
 // Auth routes
 router.post('/register', register);
