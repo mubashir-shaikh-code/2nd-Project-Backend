@@ -6,7 +6,7 @@ const app = express();
 
 const MONGO_URI = 'mongodb+srv://mubashiraijaz1:1234@cluster0.4jnkxno.mongodb.net/liflow';
 
-// ✅ Middleware
+// Middleware
 app.use(cors({
   origin:"http://localhost:5173",
   credentials: true
@@ -17,7 +17,7 @@ app.use(express.json({ limit: '5mb' }));
 const orderRoutes = require('./Routes/OrderRoutes');
 app.use('/api/orders', orderRoutes);
 
-// ✅ Routes
+//  Routes
 app.use('/api/auth', require('./Routes/Auth'));
 
 
@@ -25,10 +25,10 @@ const productRoutes = require('./Routes/Product');
 app.use('/api/products', productRoutes);
 
 
-// ✅ Connect to MongoDB and start server
+//  Connect to MongoDB and start server
 mongoose.connect(MONGO_URI)
   .then(() => {
-    console.log('✅ MongoDB Connected');
+    console.log('MongoDB Connected');
     app.listen(5000, () => {
       console.log('Server running on port 5000');
     });
@@ -37,7 +37,7 @@ mongoose.connect(MONGO_URI)
     console.error('MongoDB Connection Error:', err);
   });
 
-// ✅ 404 fallback
+//  404 fallback
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });

@@ -1,6 +1,6 @@
 const Order = require('../Models/Order');
 
-// ✅ Place a new order
+// Place a new order
 const placeOrder = async (req, res) => {
   try {
     const { productId, price } = req.body;
@@ -18,15 +18,15 @@ const placeOrder = async (req, res) => {
     });
 
     await order.save();
-    console.log('✅ Order placed:', order);
+    console.log('Order placed:', order);
     res.status(201).json({ message: 'Order placed successfully', order });
   } catch (err) {
-    console.error('❌ Order placement failed:', err.message);
+    console.error('   Order placement failed:', err.message);
     res.status(500).json({ error: 'Failed to place order' });
   }
 };
 
-// ✅ Get orders for logged-in user
+//  Get orders for logged-in user
 const getUserOrders = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -34,23 +34,23 @@ const getUserOrders = async (req, res) => {
     const orders = await Order.find({ user: userId }).populate('product');
     res.status(200).json(orders);
   } catch (err) {
-    console.error('❌ Failed to fetch user orders:', err.message);
+    console.error('   Failed to fetch user orders:', err.message);
     res.status(500).json({ error: 'Failed to fetch user orders' });
   }
 };
 
-// ✅ Get all orders (admin only)
+//  Get all orders (admin only)
 const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find().populate('product').populate('user');
     res.status(200).json(orders);
   } catch (err) {
-    console.error('❌ Failed to fetch all orders:', err.message);
+    console.error('   Failed to fetch all orders:', err.message);
     res.status(500).json({ error: 'Failed to fetch all orders' });
   }
 };
 
-// ✅ Update order status
+// Update order status
 const updateOrderStatus = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -68,17 +68,17 @@ const updateOrderStatus = async (req, res) => {
 
     order.status = status;
 
-    // ✅ If status is "Cancelled", mark cancelApproved
+    //  If status is "Cancelled", mark cancelApproved
     if (status === 'Cancelled') {
       order.cancelApproved = true;
     }
 
     await order.save();
 
-    console.log('✅ Order status updated:', order);
-    res.status(200).json(order); // ✅ Return updated order
+    console.log('Order status updated:', order);
+    res.status(200).json(order); //   Return updated order
   } catch (err) {
-    console.error('❌ Failed to update order status:', err.message);
+    console.error('   Failed to update order status:', err.message);
     res.status(500).json({ error: 'Failed to update order status' });
   }
 };

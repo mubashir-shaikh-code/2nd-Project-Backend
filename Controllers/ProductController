@@ -1,7 +1,7 @@
   const Product = require('../Models/Product');
   const cloudinary = require('../Cloudinary');
 
-  // ✅ Get all approved products
+  // Get all approved products
   const getAllProducts = async (req, res) => {
     try {
       const products = await Product.find({ status: 'approved' }).sort({ createdAt: -1 });
@@ -11,7 +11,7 @@
     }
   };
 
-  // ✅ Get products by user ID
+  //  Get products by user ID
   const getUserProducts = async (req, res) => {
     try {
       const userId = req.user.id; // assuming `id` is in your token
@@ -22,7 +22,7 @@
     }
   };
 
-  // ✅ Get pending products (admin only)
+  // Get pending products (admin only)
   const getPendingProducts = async (req, res) => {
     try {
       const pendingProducts = await Product.find({ status: 'pending' }).sort({ createdAt: -1 });
@@ -33,7 +33,7 @@
     }
   };
 
-  // ✅ Approve product
+  //  Approve product
   const approveProduct = async (req, res) => {
     try {
       const { id } = req.params;
@@ -52,7 +52,7 @@
     }
   };
 
-  // ✅ Reject/Delete a product
+  // Reject/Delete a product
   const rejectProduct = async (req, res) => {
     try {
       const { id } = req.params;
@@ -67,7 +67,7 @@
     }
   };
 
-  // ✅ Post a new product
+  //  Post a new product
   const postProduct = async (req, res) => {
     try {
       const { description, price, image, category } = req.body;
@@ -100,7 +100,7 @@
     }
   };
 
-  // ✅ Delete product
+  // Delete product
   const deleteProduct = async (req, res) => {
     try {
       const productId = req.params.id;
@@ -112,7 +112,7 @@
   };
 
 
-  // ✅ Update product
+  // Update product
   const updateProduct = async (req, res) => {
     try {
       const updatedProduct = await Product.findByIdAndUpdate(req.params.id, req.body, {

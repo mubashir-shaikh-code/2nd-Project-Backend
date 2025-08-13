@@ -9,18 +9,18 @@ const {
   approveOrderCancellation
 } = require('../Controllers/OrderController');
 
-const { verifyToken, verifyTokenAndAdmin,admin } = require('../Middleware/Auth'); // ✅ Your JWT middleware
+const { verifyToken, verifyTokenAndAdmin,admin } = require('../Middleware/Auth'); //   Your JWT middleware
 
-// ✅ User places an order
+// User places an order
 router.post('/place', verifyToken, placeOrder);
 
-// ✅ User views their orders
+// User views their orders
 router.get('/user', verifyToken, getUserOrders);
 
-// ✅ Admin views all orders
+// Admin views all orders
 router.get('/admin', verifyTokenAndAdmin, getAllOrders);
 
-// ✅ Admin updates order status
+// Admin updates order status
 router.put('/admin/:orderId', verifyTokenAndAdmin, updateOrderStatus);
 
 // User requests cancellation
