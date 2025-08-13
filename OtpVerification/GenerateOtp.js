@@ -1,5 +1,3 @@
-// backend/otpverification/generateOtp.js
-
 function generateOtp(length = 6) {
   const digits = '0123456789';
   let otp = '';
