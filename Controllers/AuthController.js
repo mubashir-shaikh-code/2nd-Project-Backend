@@ -2,8 +2,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../Models/Models');
 const cloudinary = require('../Cloudinary');
+const OtpModel = require('../Models/Otp'); 
 
-const SECRET_KEY = 'your_jwt_secret_key'; //   Keep this as-is
+const SECRET_KEY = 'your_jwt_secret_key'; // Keep this as-is
 
 // Register controller
 const register = async (req, res) => {
@@ -38,7 +39,6 @@ const login = async (req, res) => {
     const ADMIN_EMAIL = 'admin@liflow.com';
     const ADMIN_PASS = 'admin123';
 
-    // Admin login
     if (email === ADMIN_EMAIL && password === ADMIN_PASS) {
       const token = jwt.sign(
         {
@@ -63,7 +63,6 @@ const login = async (req, res) => {
       });
     }
 
-    // Normal user login
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ error: 'Invalid credentials' });
 
@@ -109,13 +108,12 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-// Update user profile (with email check)
+// Update user profile
 const updateUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    // Check for email change and uniqueness
     if (req.body.email && req.body.email !== user.email) {
       const emailExists = await User.findOne({ email: req.body.email });
       if (emailExists) {
@@ -124,11 +122,9 @@ const updateUserProfile = async (req, res) => {
       user.email = req.body.email;
     }
 
-    //  Update other fields
     user.username = req.body.username || user.username;
     user.profilePic = req.body.profilePic || user.profilePic;
 
-    //  Update password if provided
     if (req.body.password && req.body.password.trim() !== '') {
       user.password = await bcrypt.hash(req.body.password, 10);
     }
@@ -147,9 +143,37 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
+// ✅ Reset Password controller
+const resetPassword = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Email and new password are required' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    await OtpModel.deleteMany({ email }); // ✅ Clean up OTPs
+
+    res.status(200).json({ success: true, message: 'Password updated successfully' });
+  } catch (err) {
+    console.error('   Reset Password Error:', err);
+    res.status(500).json({ success: false, message: 'Failed to reset password' });
+  }
+};
+
 module.exports = {
   register,
   login,
   getUserProfile,
   updateUserProfile,
+  resetPassword, 
 };

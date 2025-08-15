@@ -5,6 +5,10 @@ const { getUserProfile, updateUserProfile } = require('../Controllers/AuthContro
 const { verifyToken } = require('../Middleware/Auth');
 const sendOtp = require('../OtpVerification/SendOtp');
 const verifyOtp = require('../OtpVerification/VerifyOtp');
+const { resetPassword } = require('../Controllers/AuthController');
+
+//reset password route
+router.post('/reset-password', resetPassword);
 
 //Otp Verification routes
 router.post('/send-otp', sendOtp);
