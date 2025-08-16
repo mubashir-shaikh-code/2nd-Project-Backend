@@ -143,7 +143,7 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
-// ✅ Reset Password controller
+// Reset Password controller
 const resetPassword = async (req, res) => {
   try {
     const { email, newPassword } = req.body;
@@ -161,7 +161,7 @@ const resetPassword = async (req, res) => {
     user.password = hashedPassword;
     await user.save();
 
-    await OtpModel.deleteMany({ email }); // ✅ Clean up OTPs
+    await OtpModel.deleteMany({ email }); //    Clean up OTPs
 
     res.status(200).json({ success: true, message: 'Password updated successfully' });
   } catch (err) {
