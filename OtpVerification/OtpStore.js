@@ -1,15 +1,25 @@
-const otpStore = new Map();
+const db = require('../db');
 
-function saveOtp(email, otp) {
-  otpStore.set(email, { otp, createdAt: Date.now() });
+// Save OTP in DB
+async function saveOtp(email, otp, expiresAt) {
+  await db.query(
+    'INSERT INTO otps (email, otp, expiresAt) VALUES (?, ?, ?)',
+    [email, otp, expiresAt]
+  );
 }
 
-function getOtp(email) {
-  return otpStore.get(email);
+// Get latest OTP for email
+async function getOtp(email) {
+  const [rows] = await db.query(
+    'SELECT * FROM otps WHERE email = ? ORDER BY createdAt DESC LIMIT 1',
+    [email]
+  );
+  return rows[0] || null;
 }
 
-function deleteOtp(email) {
-  otpStore.delete(email);
+// Delete OTPs for email
+async function deleteOtp(email) {
+  await db.query('DELETE FROM otps WHERE email = ?', [email]);
 }
 
 module.exports = { saveOtp, getOtp, deleteOtp };

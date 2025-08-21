@@ -1,26 +1,37 @@
 const express = require('express');
 const router = express.Router();
-const { register, login } = require('../Controllers/AuthController');
-const { getUserProfile, updateUserProfile } = require('../Controllers/AuthController');
-const { verifyToken } = require('../Middleware/Auth');
-const sendOtp = require('../OtpVerification/SendOtp');
-const verifyOtp = require('../OtpVerification/VerifyOtp');
-const { resetPassword } = require('../Controllers/AuthController');
+const {
+  register,
+  login,
+  getUserProfile,
+  updateUserProfile,
+  resetPassword,
+  sendOtp,
+  verifyOtp
+} = require('../Controllers/AuthController');
 
-//reset password route
+const {
+  placeOrder,
+  getUserOrders,
+  getAllOrders,
+  updateOrderStatus
+} = require('../Controllers/OrderController'); // ✅ separate file for orders
+
+// ✅ Auth
+router.post('/register', register);
+router.post('/login', login);
+router.get('/profile', getUserProfile);
+router.put('/profile/update', updateUserProfile);
 router.post('/reset-password', resetPassword);
 
-//Otp Verification routes
+// ✅ OTP
 router.post('/send-otp', sendOtp);
 router.post('/verify-otp', verifyOtp);
 
-// Auth routes
-router.post('/register', register);
-router.post('/login', login);
-
-// Profile routes
-router.route('/profile')
-  .get(verifyToken, getUserProfile)
-  .put(verifyToken, updateUserProfile);
+// ✅ Orders
+router.post('/orders/place', placeOrder);
+router.get('/orders/user/:userId', getUserOrders);
+router.get('/orders/all', getAllOrders);
+router.put('/orders/update/:id', updateOrderStatus);
 
 module.exports = router;

@@ -1,28 +1,44 @@
-const Product = require("../Models/Product");
-const cloudinary = require("../Cloudinary");
+// Controllers/ProductController.js
+const db = require("../db"); // ✅ MySQL connection
 
-// ✅ Get all approved products (with user details populated)
+// ==================== PRODUCTS ====================
+
+// Get all approved products (with SQL pagination)
 const getAllProducts = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = 10;
-    const skip = (page - 1) * limit;
+    const page = parseInt(req.query.page) || 1; // Current page
+    const limit = parseInt(req.query.limit) || 10; // Items per page
+    const offset = (page - 1) * limit; // SQL OFFSET
 
-    const products = await Product.find({ status: "approved" })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .populate("username email");
+    const [products] = await db.query(
+      "SELECT * FROM products WHERE status = 'approved' ORDER BY id DESC LIMIT ? OFFSET ?",
+      [limit, offset]
+    );
 
-    const totalProducts = await Product.countDocuments({ status: "approved" });
+    const [count] = await db.query(
+      "SELECT COUNT(*) as total FROM products WHERE status = 'approved'"
+    );
+
+    const formatted = products.map((p) => ({
+      _id: p.id,
+      id: p.id,
+      description: p.description,
+      price: p.price,
+      image: p.image,
+      category: p.category,
+      status: p.status,
+      userId: p.userId,
+      userEmail: p.userEmail,
+    }));
 
     res.status(200).json({
-      products,
-      totalProducts,
+      products: formatted,
+      totalProducts: count[0].total,
       page,
-      totalPages: Math.ceil(totalProducts / limit),
+      totalPages: Math.ceil(count[0].total / limit),
     });
   } catch (err) {
+    console.error("Error fetching products:", err);
     res.status(500).json({ error: "Server Error" });
   }
 };
@@ -31,10 +47,28 @@ const getAllProducts = async (req, res) => {
 const getUserProducts = async (req, res) => {
   try {
     const userId = req.user.id;
-    const products = await Product.find({ postedBy: userId })
-      .populate("postedBy", "username email");
-    res.json(products);
+    const [products] = await db.query(
+      "SELECT * FROM products WHERE userId = ?",
+      [userId]
+    );
+
+    const formatted = Array.isArray(products)
+      ? products.map((p) => ({
+          _id: p.id,
+          id: p.id,
+          description: p.description,
+          price: p.price,
+          image: p.image,
+          category: p.category,
+          status: p.status,
+          userId: p.userId,
+          userEmail: p.userEmail,
+        }))
+      : [];
+
+    res.json(formatted);
   } catch (err) {
+    console.error("Error fetching user products:", err);
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -42,13 +76,27 @@ const getUserProducts = async (req, res) => {
 // ✅ Get pending products (admin only)
 const getPendingProducts = async (req, res) => {
   try {
-    const pendingProducts = await Product.find({ status: "pending" })
-      .sort({ createdAt: -1 })
-      .populate("postedBy", "username email");
+    const [pendingProducts] = await db.query(
+      "SELECT * FROM products WHERE status = 'pending' ORDER BY id DESC"
+    );
 
-    res.status(200).json(pendingProducts);
+    const formatted = Array.isArray(pendingProducts)
+      ? pendingProducts.map((p) => ({
+          _id: p.id,
+          id: p.id,
+          description: p.description,
+          price: p.price,
+          image: p.image,
+          category: p.category,
+          status: p.status,
+          userId: p.userId,
+          userEmail: p.userEmail,
+        }))
+      : [];
+
+    res.status(200).json(formatted);
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching pending products:", err);
     res.status(500).json({ error: "Server Error" });
   }
 };
@@ -57,19 +105,16 @@ const getPendingProducts = async (req, res) => {
 const approveProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedProduct = await Product.findByIdAndUpdate(
-      id,
-      { status: "approved" },
-      { new: true }
-    ).populate("postedBy", "username email");
+    const [result] = await db.query(
+      "UPDATE products SET status = 'approved' WHERE id = ?",
+      [id]
+    );
 
-    if (!updatedProduct) {
+    if (result.affectedRows === 0) {
       return res.status(404).json({ error: "Product not found" });
     }
 
-    res
-      .status(200)
-      .json({ message: "Product approved successfully", product: updatedProduct });
+    res.status(200).json({ success: true, message: "Product approved", id });
   } catch (err) {
     console.error("Error approving product:", err);
     res.status(500).json({ error: "Server error while approving product" });
@@ -80,11 +125,17 @@ const approveProduct = async (req, res) => {
 const rejectProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const rejectedProduct = await Product.findByIdAndDelete(id);
-    if (!rejectedProduct) {
+    const [result] = await db.query("DELETE FROM products WHERE id = ?", [id]);
+
+    if (result.affectedRows === 0) {
       return res.status(404).json({ error: "Product not found" });
     }
-    res.status(200).json({ message: "Product rejected and removed successfully" });
+
+    res.status(200).json({
+      success: true,
+      message: "Product rejected and removed",
+      id,
+    });
   } catch (err) {
     console.error("Error rejecting product:", err);
     res.status(500).json({ error: "Server error while rejecting product" });
@@ -96,63 +147,134 @@ const postProduct = async (req, res) => {
   try {
     const { description, price, image, category } = req.body;
     const userId = req.user.id; // from token
+    const userEmail = req.user.email;
 
     if (!description || !price || !image || !category) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
-    const uploadRes = await cloudinary.uploader.upload(image, {
-      folder: "products",
+    const finalImage = image; // base64 or URL
+
+    const [result] = await db.query(
+      "INSERT INTO products (description, price, image, category, userId, userEmail, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')",
+      [description, price, finalImage, category, userId, userEmail]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "Product submitted for approval",
+      id: result.insertId,
+      _id: result.insertId,
     });
-
-    const newProduct = new Product({
-      description,
-      price,
-      image: uploadRes.secure_url,
-      category,
-      postedBy: userId, // store user reference
-      status: "pending",
-    });
-
-    const savedProduct = await newProduct.save();
-    const populatedProduct = await savedProduct.populate("postedBy", "username email");
-
-    res
-      .status(201)
-      .json({ message: "Product submitted for approval", product: populatedProduct });
   } catch (err) {
     console.error("Error posting product:", err);
     res.status(500).json({ error: "Server error while posting product" });
   }
 };
 
-// ✅ Delete product
+// ✅ Delete product (user)
 const deleteProduct = async (req, res) => {
   try {
     const productId = req.params.id;
-    await Product.findByIdAndDelete(productId);
-    res.status(200).json({ message: "Product deleted successfully" });
+    const [result] = await db.query("DELETE FROM products WHERE id = ?", [
+      productId,
+    ]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Product deleted",
+      id: productId,
+      _id: productId,
+    });
   } catch (err) {
-    res.status(500).json({ message: "Failed to delete product", error: err.message });
+    console.error("Error deleting product:", err);
+    res.status(500).json({ message: "Failed to delete product" });
   }
 };
 
-// ✅ Update product
+// ✅ Update product (user)
 const updateProduct = async (req, res) => {
   try {
-    const updatedProduct = await Product.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    ).populate("postedBy", "username email");
+    const productId = req.params.id;
+    const { description, price, image, category } = req.body;
 
-    if (!updatedProduct) {
+    const [result] = await db.query(
+      "UPDATE products SET description=?, price=?, image=?, category=? WHERE id=?",
+      [description, price, image, category, productId]
+    );
+
+    if (result.affectedRows === 0) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    res.status(200).json(updatedProduct);
+    res.status(200).json({
+      success: true,
+      message: "Product updated",
+      id: productId,
+      _id: productId,
+    });
   } catch (err) {
+    console.error("Error updating product:", err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+// ==================== REVIEWS ====================
+
+// ✅ Add review and return updated reviews
+const addReview = async (req, res) => {
+  try {
+    const { productId, rating, review } = req.body;
+    const userId = req.user.id;
+
+    if (!productId || !rating) {
+      return res.status(400).json({ error: "Product ID and rating required" });
+    }
+
+    await db.query(
+      "INSERT INTO reviews (productId, userId, rating, review) VALUES (?, ?, ?, ?)",
+      [productId, userId, rating, review]
+    );
+
+    // ✅ Fetch updated reviews
+    const [reviews] = await db.query(
+      `SELECT r.*, u.username 
+       FROM reviews r 
+       JOIN users u ON r.userId = u.id 
+       WHERE r.productId = ? 
+       ORDER BY r.createdAt DESC`,
+      [productId]
+    );
+
+    res.status(201).json(Array.isArray(reviews) ? reviews : []);
+  } catch (err) {
+    console.error("Error adding review:", err);
+    res.status(500).json({ reviews: [] });
+  }
+};
+
+// ✅ Get reviews for a product (always array)
+const getProductReviews = async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    const [reviews] = await db.query(
+      `SELECT r.*, u.username 
+       FROM reviews r 
+       JOIN users u ON r.userId = u.id 
+       WHERE r.productId = ? 
+       ORDER BY r.createdAt DESC`,
+      [productId]
+    );
+
+    res.status(200).json(Array.isArray(reviews) ? reviews : []);
+  } catch (err) {
+    console.error("Error fetching reviews:", err);
+    res.status(500).json({ reviews: [] });
   }
 };
 
@@ -165,4 +287,6 @@ module.exports = {
   postProduct,
   updateProduct,
   getUserProducts,
+  addReview,
+  getProductReviews,
 };
